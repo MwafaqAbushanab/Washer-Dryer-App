@@ -1,0 +1,573 @@
+import React, { useState } from 'react';
+import { Calendar, CheckCircle, AlertCircle, FileText, CreditCard, Wrench, Home } from 'lucide-react';
+
+export default function WasherDryerRental() {
+  const [currentPage, setCurrentPage] = useState('home');
+  const [signatureData, setSignatureData] = useState('');
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [contractSigned, setContractSigned] = useState(false);
+  const [paymentComplete, setPaymentComplete] = useState(false);
+  const [installationScheduled, setInstallationScheduled] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    installDate: ''
+  });
+
+  const [tickets, setTickets] = useState([]);
+  const [newTicket, setNewTicket] = useState({ subject: '', description: '' });
+
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSignature = (e) => {
+    if (!isDrawing) return;
+    const canvas = e.target;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const ctx = canvas.getContext('2d');
+    if (!signatureData) {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+    setSignatureData('signed');
+  };
+
+  const clearSignature = () => {
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setSignatureData('');
+  };
+
+  const handleContractSign = () => {
+    if (signatureData && formData.fullName && formData.email && formData.phone && formData.address) {
+      setContractSigned(true);
+      setCurrentPage('payment');
+    } else {
+      alert('Please complete all required fields and sign the contract');
+    }
+  };
+
+  const handlePayment = () => {
+    if (formData.cardNumber && formData.expiryDate && formData.cvv) {
+      setPaymentComplete(true);
+      setCurrentPage('installation');
+    } else {
+      alert('Please complete all payment fields');
+    }
+  };
+
+  const handleInstallation = () => {
+    if (formData.installDate) {
+      setInstallationScheduled(true);
+      setCurrentPage('dashboard');
+    } else {
+      alert('Please select an installation date');
+    }
+  };
+
+  const submitTicket = () => {
+    if (newTicket.subject && newTicket.description) {
+      setTickets([...tickets, {
+        id: Date.now(),
+        ...newTicket,
+        status: 'Open',
+        date: new Date().toLocaleDateString(),
+        resolutionTime: '72 hours'
+      }]);
+      setNewTicket({ subject: '', description: '' });
+      alert('Support ticket submitted! We will respond within 72 hours.');
+    } else {
+      alert('Please fill in both subject and description');
+    }
+  };
+
+  // Home Page
+  if (currentPage === 'home') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+            <div className="text-center mb-8">
+              <div className="flex justify-center mb-4">
+                <Wrench className="w-16 h-16 text-blue-600" />
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                EasyWash Rentals
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                Premium Washer-Dryer Combos for Just $60/Month
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-blue-50 p-6 rounded-xl text-center">
+                <CreditCard className="w-12 h-12 text-blue-600 mx-auto mb-3" />
+                <h3 className="font-bold text-lg mb-2">Affordable</h3>
+                <p className="text-gray-600">Only $60 per month</p>
+              </div>
+              <div className="bg-blue-50 p-6 rounded-xl text-center">
+                <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                <h3 className="font-bold text-lg mb-2">Quality Units</h3>
+                <p className="text-gray-600">Well-maintained machines</p>
+              </div>
+              <div className="bg-blue-50 p-6 rounded-xl text-center">
+                <Wrench className="w-12 h-12 text-orange-600 mx-auto mb-3" />
+                <h3 className="font-bold text-lg mb-2">72hr Support</h3>
+                <p className="text-gray-600">Fast issue resolution</p>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6 mb-8">
+              <h3 className="font-bold text-lg mb-3 flex items-center">
+                <AlertCircle className="w-5 h-5 mr-2 text-yellow-600" />
+                Important Contract Terms
+              </h3>
+              <ul className="space-y-2 text-gray-700">
+                <li>• 6-month minimum rental period</li>
+                <li>• $300 early cancellation fee if canceled before 6 months</li>
+                <li>• Automatic monthly payments on the same day each month</li>
+                <li>• Free installation and setup included</li>
+                <li>• 72-hour support response guarantee</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => setCurrentPage('contract')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 px-8 rounded-xl transition shadow-lg"
+            >
+              Get Started - Sign Contract
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Contract Page
+  if (currentPage === 'contract') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+            <h2 className="text-3xl font-bold mb-6 flex items-center">
+              <FileText className="w-8 h-8 mr-3 text-blue-600" />
+              Rental Contract
+            </h2>
+
+            <div className="space-y-4 mb-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">Full Name *</label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">Email *</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                    placeholder="john@email.com"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">Phone *</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                    placeholder="(555) 123-4567"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">Address *</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                    placeholder="123 Main St"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">State</label>
+                  <input
+                    type="text"
+                    name="state"
+                    value={formData.state}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">ZIP</label>
+                  <input
+                    type="text"
+                    name="zip"
+                    value={formData.zip}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 border-2 border-gray-300 rounded-xl p-6 mb-6 max-h-64 overflow-y-auto">
+              <h3 className="font-bold text-lg mb-3">Terms and Conditions</h3>
+              <div className="space-y-2 text-sm text-gray-700">
+                <p><strong>1. Rental Agreement:</strong> This agreement is for the rental of one washer-dryer combo unit at $60.00 per month.</p>
+                <p><strong>2. Minimum Term:</strong> This is a 6-month minimum contract. Early cancellation within the first 6 months will result in a $300.00 service fee.</p>
+                <p><strong>3. Payment:</strong> Monthly payments of $60.00 will be automatically charged on the same day each month to the payment method on file.</p>
+                <p><strong>4. Installation:</strong> Installation is included and will be scheduled after contract signing and payment confirmation.</p>
+                <p><strong>5. Maintenance:</strong> EasyWash Rentals is responsible for all repairs and maintenance at no additional cost.</p>
+                <p><strong>6. Support:</strong> All support tickets will be responded to within 72 hours.</p>
+                <p><strong>7. Condition:</strong> Customer agrees to maintain the unit in good working condition and report any issues promptly.</p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-bold mb-2">Signature *</label>
+              <canvas
+                id="signatureCanvas"
+                width="600"
+                height="150"
+                className="border-2 border-gray-300 rounded-lg w-full cursor-crosshair bg-white"
+                onMouseDown={() => setIsDrawing(true)}
+                onMouseUp={() => setIsDrawing(false)}
+                onMouseMove={handleSignature}
+                onMouseLeave={() => setIsDrawing(false)}
+              />
+              <button
+                onClick={clearSignature}
+                className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+              >
+                Clear Signature
+              </button>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setCurrentPage('home')}
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl transition"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleContractSign}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition"
+              >
+                Sign Contract & Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Payment Page
+  if (currentPage === 'payment') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+            <h2 className="text-3xl font-bold mb-6 flex items-center">
+              <CreditCard className="w-8 h-8 mr-3 text-blue-600" />
+              Payment Information
+            </h2>
+
+            <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4 mb-6">
+              <p className="text-lg font-bold">First Month Payment: $60.00</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Auto-renewal on {new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}
+              </p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-bold mb-2">Card Number *</label>
+                <input
+                  type="text"
+                  name="cardNumber"
+                  value={formData.cardNumber}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                  placeholder="1234 5678 9012 3456"
+                  maxLength="19"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold mb-2">Expiry Date *</label>
+                  <input
+                    type="text"
+                    name="expiryDate"
+                    value={formData.expiryDate}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                    placeholder="MM/YY"
+                    maxLength="5"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">CVV *</label>
+                  <input
+                    type="text"
+                    name="cvv"
+                    value={formData.cvv}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+                    placeholder="123"
+                    maxLength="4"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 mb-6 text-sm">
+              <p className="flex items-center">
+                <AlertCircle className="w-4 h-4 mr-2 text-yellow-600" />
+                Your card will be charged $60.00 monthly on the same day each month
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setCurrentPage('contract')}
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-6 rounded-xl transition"
+              >
+                Back
+              </button>
+              <button
+                onClick={handlePayment}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition"
+              >
+                Pay $60.00 & Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Installation Scheduling
+  if (currentPage === 'installation') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+            <h2 className="text-3xl font-bold mb-6 flex items-center">
+              <Calendar className="w-8 h-8 mr-3 text-blue-600" />
+              Schedule Installation
+            </h2>
+
+            <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4 mb-6">
+              <p className="flex items-center text-green-800 font-bold">
+                <CheckCircle className="w-5 h-5 mr-2" />
+                Payment Confirmed!
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                Contract signed and first payment received
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-bold mb-2">Preferred Installation Date *</label>
+              <input
+                type="date"
+                name="installDate"
+                value={formData.installDate}
+                onChange={handleInputChange}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-4 mb-6">
+              <h3 className="font-bold mb-2">Installation Details:</h3>
+              <ul className="space-y-1 text-sm text-gray-700">
+                <li>• Installation takes approximately 1-2 hours</li>
+                <li>• Someone 18+ must be present</li>
+                <li>• We'll confirm exact time 24 hours before</li>
+                <li>• Installation is completely free</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={handleInstallation}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition"
+            >
+              Confirm Installation Date
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard
+  if (currentPage === 'dashboard') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-3xl font-bold flex items-center">
+                <Home className="w-8 h-8 mr-3 text-blue-600" />
+                My Dashboard
+              </h1>
+              <button
+                onClick={() => setCurrentPage('home')}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                Logout
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl">
+                <p className="text-sm opacity-90 mb-1">Monthly Payment</p>
+                <p className="text-3xl font-bold">$60.00</p>
+                <p className="text-xs opacity-75 mt-2">Next payment: {new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl">
+                <p className="text-sm opacity-90 mb-1">Contract Status</p>
+                <p className="text-2xl font-bold">Active</p>
+                <p className="text-xs opacity-75 mt-2">Month 1 of 6</p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl">
+                <p className="text-sm opacity-90 mb-1">Installation</p>
+                <p className="text-2xl font-bold">Scheduled</p>
+                <p className="text-xs opacity-75 mt-2">{formData.installDate}</p>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 mb-6">
+              <p className="font-bold mb-1">Early Cancellation Notice</p>
+              <p className="text-sm text-gray-700">
+                Canceling before {new Date(Date.now() + 180*24*60*60*1000).toLocaleDateString()} will result in a $300 service fee
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8">
+            <h2 className="text-2xl font-bold mb-6 flex items-center">
+              <Wrench className="w-7 h-7 mr-3 text-orange-600" />
+              Support Center
+            </h2>
+
+            <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-4 mb-6">
+              <p className="font-bold text-blue-900">Our Promise: 72-Hour Response</p>
+              <p className="text-sm text-gray-700 mt-1">
+                We guarantee a response to all support tickets within 72 hours
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="font-bold mb-3">Submit a Support Ticket</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-bold mb-1">Subject</label>
+                  <input
+                    type="text"
+                    value={newTicket.subject}
+                    onChange={(e) => setNewTicket({...newTicket, subject: e.target.value})}
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                    placeholder="Brief description of the issue"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-1">Description</label>
+                  <textarea
+                    value={newTicket.description}
+                    onChange={(e) => setNewTicket({...newTicket, description: e.target.value})}
+                    className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                    rows="4"
+                    placeholder="Please describe your issue in detail..."
+                  />
+                </div>
+                <button
+                  onClick={submitTicket}
+                  className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-6 rounded-lg transition"
+                >
+                  Submit Ticket
+                </button>
+              </div>
+            </div>
+
+            {tickets.length > 0 && (
+              <div>
+                <h3 className="font-bold mb-3">Your Support Tickets</h3>
+                <div className="space-y-3">
+                  {tickets.map((ticket) => (
+                    <div key={ticket.id} className="border-2 border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-bold">{ticket.subject}</h4>
+                        <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full">
+                          {ticket.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{ticket.description}</p>
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Submitted: {ticket.date}</span>
+                        <span>Response within: {ticket.resolutionTime}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
